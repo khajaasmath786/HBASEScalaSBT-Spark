@@ -1,5 +1,6 @@
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.TableName
-import org.apache.hadoop.hbase.client.{Scan, Put, Connection}
+import org.apache.hadoop.hbase.client.{ConnectionFactory, Scan, Put, Connection}
 import org.apache.hadoop.hbase.util.Bytes
 
 /**
@@ -7,6 +8,18 @@ import org.apache.hadoop.hbase.util.Bytes
  */
 object HBasePopulator {
   def main(args: Array[String]): Unit = {
+    val connection = ConnectionFactory.createConnection(new Configuration())
+
+    populate(100,
+      10000,
+      1,
+      connection: Connection,
+      "EnergyMonitorTable")
+
+    megaScan(connection, "EnergyMonitorTable")
+  }
+
+  def createTable(): Unit = {
 
   }
 
@@ -16,7 +29,7 @@ object HBasePopulator {
                connection: Connection,
                 tableStr:String): Unit = {
 
-    val bufferedMutator = connection.getBufferedMutator(new TableName(tableStr))
+    val bufferedMutator = connection.getBufferedMutator(TableName.valueOf(tableStr))
     val generator = new EnergyMonitorDataGen(numOfUsers)
 
     for (i <- 0 to numOfRecords) {
@@ -38,7 +51,7 @@ object HBasePopulator {
   }
 
   def megaScan(connection:Connection, tableStr:String): Unit = {
-    val table = connection.getTable(new TableName(tableStr))
+    val table = connection.getTable(TableName.valueOf(tableStr))
     val scan = new Scan()
     scan.setBatch(1000)
     scan.setCaching(1000)
